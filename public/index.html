@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowMind — AI Task Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ──────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+
+    <div class="auth-logo">
+      <div class="logo-mark">FM</div>
+      <span class="auth-logo-text">FlowMind</span>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"    onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="fld">
+        <label class="fld-label">Email</label>
+        <input class="fld-input" id="login-email" type="email"
+               placeholder="demo@flowmind.app"
+               autocomplete="email"
+               onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="fld">
+        <label class="fld-label">Password</label>
+        <input class="fld-input" id="login-password" type="password"
+               placeholder="••••••••"
+               autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="auth-error" id="login-error"></div>
+      <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">
+        Sign In
+      </button>
+      <div class="auth-hint">
+        Demo account: <strong>demo@flowmind.app</strong> / <strong>password123</strong>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none">
+      <div class="fld">
+        <label class="fld-label">Your Name</label>
+        <input class="fld-input" id="reg-name" type="text"
+               placeholder="Jane Smith"
+               autocomplete="name" />
+      </div>
+      <div class="fld">
+        <label class="fld-label">Email</label>
+        <input class="fld-input" id="reg-email" type="email"
+               placeholder="you@example.com"
+               autocomplete="email" />
+      </div>
+      <div class="fld">
+        <label class="fld-label">Password <span style="font-weight:400;color:var(--text3)">(min 6 chars)</span></label>
+        <input class="fld-input" id="reg-password" type="password"
+               placeholder="••••••••"
+               autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')doRegister()" />
+      </div>
+      <div class="auth-error" id="register-error"></div>
+      <button class="btn btn-primary btn-full" id="register-btn" onclick="doRegister()">
+        Create Account
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MAIN APP ─────────────────────────────────── -->
+<div id="app" style="display:none">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-mark">FM</div>
+      FlowMind
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="goPage('board')">Board</button>
+      <button class="nav-tab" onclick="goPage('workflows')">Workflows</button>
+      <button class="nav-tab" onclick="goPage('calendar')">Calendar</button>
+      <button class="nav-tab" onclick="goPage('analytics')">Analytics</button>
+    </div>
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">User</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sb-section">Views</div>
+      <button class="sb-item active" onclick="goPage('board');setSbActive(this)">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="14" rx="1"/><rect x="9" y="1" width="6" height="9" rx="1"/></svg>
+        Kanban<span class="sb-count" id="cnt-all">0</span>
+      </button>
+      <button class="sb-item" onclick="goPage('workflows');setSbActive(this)">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h3v3H2zM11 4h3v3h-3zM2 10h3v3H2zM11 10h3v3h-3z"/><path d="M5 5.5h6M5 11.5h6M3.5 7v3M12.5 7v3"/></svg>
+        Workflows
+      </button>
+      <button class="sb-item" onclick="goPage('calendar');setSbActive(this)">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="13" rx="1.5"/><path d="M1 6h14M5 1v2M11 1v2"/></svg>
+        Calendar
+      </button>
+      <button class="sb-item" onclick="goPage('analytics');setSbActive(this)">
+        <svg class="sb-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l3-4 3 2 3-5 3 3"/></svg>
+        Analytics
+      </button>
+
+      <div class="sb-section" style="margin-top:8px">Filter</div>
+      <button class="sb-cat" onclick="applyFilter('all',null)"><div class="dot" style="background:var(--text3)"></div>All</button>
+      <button class="sb-cat" onclick="applyFilter('todo',null)"><div class="dot" style="background:var(--blue)"></div>To-do</button>
+      <button class="sb-cat" onclick="applyFilter('inprogress',null)"><div class="dot" style="background:var(--amber)"></div>In Progress</button>
+      <button class="sb-cat" onclick="applyFilter('done',null)"><div class="dot" style="background:var(--green)"></div>Done</button>
+
+      <div class="sb-section" style="margin-top:8px">Category</div>
+      <button class="sb-cat" onclick="applyFilter(null,'Design')"><div class="dot" style="background:#a78bfa"></div>Design</button>
+      <button class="sb-cat" onclick="applyFilter(null,'Engineering')"><div class="dot" style="background:var(--blue)"></div>Engineering</button>
+      <button class="sb-cat" onclick="applyFilter(null,'Marketing')"><div class="dot" style="background:var(--green)"></div>Marketing</button>
+      <button class="sb-cat" onclick="applyFilter(null,'Research')"><div class="dot" style="background:var(--amber)"></div>Research</button>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- BOARD PAGE -->
+      <div class="page active" id="page-board">
+        <div class="stats-row">
+          <div class="stat-card c-purple"><div class="stat-lbl">Total</div><div class="stat-val c-purple" id="s-total">0</div></div>
+          <div class="stat-card c-amber"><div class="stat-lbl">In Progress</div><div class="stat-val c-amber" id="s-prog">0</div></div>
+          <div class="stat-card c-green"><div class="stat-lbl">Completed</div><div class="stat-val c-green" id="s-done">0</div></div>
+          <div class="stat-card c-red"><div class="stat-lbl">Overdue</div><div class="stat-val c-red" id="s-overdue">0</div></div>
+        </div>
+        <div class="sec-header">
+          <div>
+            <div class="sec-title">Task Board</div>
+            <div class="sec-sub" id="filter-lbl">Showing all tasks</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">&#8595; CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ New Task</button>
+          </div>
+        </div>
+        <div class="kanban">
+          <div class="k-col" id="col-todo"
+               ondragover="dOver(event,'todo')" ondrop="dDrop(event,'todo')" ondragleave="dLeave(event)">
+            <div class="k-col-header">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div class="dot" style="background:var(--blue)"></div>
+                <span class="k-col-title">To-do</span>
+              </div>
+              <span class="k-col-badge" id="kcnt-todo">0</span>
+            </div>
+            <div class="k-body" id="kb-todo"></div>
+          </div>
+          <div class="k-col" id="col-inprogress"
+               ondragover="dOver(event,'inprogress')" ondrop="dDrop(event,'inprogress')" ondragleave="dLeave(event)">
+            <div class="k-col-header">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div class="dot" style="background:var(--amber)"></div>
+                <span class="k-col-title">In Progress</span>
+              </div>
+              <span class="k-col-badge" id="kcnt-inprogress">0</span>
+            </div>
+            <div class="k-body" id="kb-inprogress"></div>
+          </div>
+          <div class="k-col" id="col-done"
+               ondragover="dOver(event,'done')" ondrop="dDrop(event,'done')" ondragleave="dLeave(event)">
+            <div class="k-col-header">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div class="dot" style="background:var(--green)"></div>
+                <span class="k-col-title">Done</span>
+              </div>
+              <span class="k-col-badge" id="kcnt-done">0</span>
+            </div>
+            <div class="k-body" id="kb-done"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKFLOWS PAGE -->
+      <div class="page" id="page-workflows">
+        <div class="sec-header">
+          <div>
+            <div class="sec-title">Workflow Automation</div>
+            <div class="sec-sub">Groq fires real actions when tasks change</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openWfModal()">+ Workflow</button>
+        </div>
+        <div id="wf-list"></div>
+        <div class="hr"></div>
+        <div class="sec-title" style="font-size:14px;margin-bottom:4px">GPT Automation Assistant</div>
+        <div class="sec-sub" style="margin-bottom:10px">Context-aware — Groq knows all your tasks and workflows</div>
+        <div class="quick-chips">
+          <button class="q-chip" onclick="quickChat('What workflows should I create based on my current tasks?')">Suggest workflows</button>
+          <button class="q-chip" onclick="quickChat('Which tasks are at risk of being overdue?')">Risk check</button>
+          <button class="q-chip" onclick="quickChat('Summarize all my in-progress tasks')">Summarize tasks</button>
+          <button class="q-chip" onclick="quickChat('What should I work on next based on priority?')">What to do next</button>
+        </div>
+        <div class="chat-wrap">
+          <div class="chat-head">
+            <div class="chat-indicator"></div>
+            <div class="chat-title">FlowMind AI</div>
+            <div class="chat-model-badge" id="chat-model-badge">Groq · FREE</div>
+          </div>
+          <div class="chat-msgs" id="chat-msgs">
+            <div class="msg ai">
+              <div class="msg-role">GPT Assistant</div>
+              Hi! I have full context of your tasks and workflows. Ask me anything — prioritise, suggest automations, draft notifications, or plan your week.
+            </div>
+          </div>
+          <div class="chat-bottom">
+            <input class="chat-input" id="chat-input"
+                   placeholder="Ask Groq about your tasks..."
+                   onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChat()" />
+            <button class="chat-send" id="chat-send-btn" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR PAGE -->
+      <div class="page" id="page-calendar">
+        <div class="cal-nav-row">
+          <div class="sec-title" id="cal-label"></div>
+          <div style="display:flex;gap:8px">
+            <button class="cal-nav-btn" onclick="calShift(-1)">&#8592; Prev</button>
+            <button class="cal-nav-btn" onclick="calShift(1)">Next &#8594;</button>
+          </div>
+        </div>
+        <div class="cal-day-headers">
+          <div>Sun</div><div>Mon</div><div>Tue</div>
+          <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="sec-header">
+          <div>
+            <div class="sec-title">Analytics</div>
+            <div class="sec-sub">Live data from MongoDB</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV()">&#8595; CSV</button>
+        </div>
+        <div class="stats-row" style="margin-bottom:18px">
+          <div class="stat-card c-green"><div class="stat-lbl">Completion</div><div class="stat-val c-green" id="an-rate">0%</div></div>
+          <div class="stat-card c-blue"><div class="stat-lbl">Top Priority</div><div class="stat-val c-blue" id="an-pri" style="font-size:14px;padding-top:6px">—</div></div>
+          <div class="stat-card c-red"><div class="stat-lbl">Overdue</div><div class="stat-val c-red" id="an-overdue">0</div></div>
+          <div class="stat-card c-purple"><div class="stat-lbl">Active WF</div><div class="stat-val c-purple" id="an-wf">0</div></div>
+        </div>
+        <div class="an-grid">
+          <div class="chart-box">
+            <div class="chart-box-title">Tasks by category</div>
+            <div class="bars" id="an-bars"></div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-box-title">Status breakdown</div>
+            <div id="an-prog" style="margin-top:6px"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- TASK MODAL -->
+<div class="overlay" id="task-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="task-modal-title">New Task</div>
+      <button class="x-btn" onclick="closeTaskModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fld">
+        <label class="fld-label">Title *</label>
+        <input class="fld-input" id="f-title" placeholder="e.g. Finish project report" />
+      </div>
+      <div class="fld">
+        <label class="fld-label">Description</label>
+        <textarea class="fld-input" id="f-desc" placeholder="Optional context..."></textarea>
+      </div>
+      <div class="frow">
+        <div class="fld">
+          <label class="fld-label">Category</label>
+          <select class="fld-select" id="f-cat">
+            <option>Design</option><option>Engineering</option>
+            <option>Marketing</option><option>Research</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label class="fld-label">Status</label>
+          <select class="fld-select" id="f-status">
+            <option value="todo">To-do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fld">
+          <label class="fld-label">Priority</label>
+          <select class="fld-select" id="f-priority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label class="fld-label">Deadline</label>
+          <input class="fld-input" id="f-deadline" type="date" />
+        </div>
+      </div>
+
+      <!-- GPT AI PANEL -->
+      <div class="gpt-panel">
+        <div class="gpt-panel-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span id="gpt-panel-title">Groq Llama 3 Analysis</span>
+        </div>
+        <div class="gpt-actions-row">
+          <button class="gpt-btn" id="gab-subtasks" onclick="gptAction('subtasks')">
+            <span class="gab-icon">🧩</span>
+            <span class="gab-label">Subtask Generator</span>
+            <span class="gab-desc">Break into steps</span>
+          </button>
+          <button class="gpt-btn" id="gab-priority" onclick="gptAction('priority')">
+            <span class="gab-icon">🎯</span>
+            <span class="gab-label">Priority Advisor</span>
+            <span class="gab-desc">High / Med / Low</span>
+          </button>
+          <button class="gpt-btn" id="gab-automation" onclick="gptAction('automation')">
+            <span class="gab-icon">&#x26A1;</span>
+            <span class="gab-label">Automation Ideas</span>
+            <span class="gab-desc">Workflow suggestions</span>
+          </button>
+          <button class="gpt-btn" id="gab-notify" onclick="gptAction('notify')">
+            <span class="gab-icon">&#x1F4E8;</span>
+            <span class="gab-label">Draft Notifications</span>
+            <span class="gab-desc">Email + Slack</span>
+          </button>
+        </div>
+        <div id="gpt-loading" style="display:none;text-align:center;padding:14px;font-size:11px;color:var(--text3)">
+          <span class="spin dark"></span> GPT is thinking...
+        </div>
+        <div class="gpt-result" id="gpt-result"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="closeTaskModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="save-task-btn" onclick="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW MODAL -->
+<div class="overlay" id="wf-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Workflow</div>
+      <button class="x-btn" onclick="closeWfModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fld">
+        <label class="fld-label">Workflow Name</label>
+        <input class="fld-input" id="wf-name" placeholder="e.g. GPT email on task done" />
+      </div>
+      <div class="frow">
+        <div class="fld">
+          <label class="fld-label">Trigger</label>
+          <select class="fld-select" id="wf-trigger">
+            <option value="task-done">Task marked Done</option>
+            <option value="task-created">Task created</option>
+            <option value="high-priority">High-priority added</option>
+            <option value="task-overdue">Task overdue</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label class="fld-label">Action</label>
+          <select class="fld-select" id="wf-action">
+            <option value="notify">Send notification</option>
+            <option value="gpt-suggest">GPT: Suggest next task</option>
+            <option value="gpt-summary">GPT: Generate summary</option>
+            <option value="gpt-email">GPT: Draft + send email</option>
+            <option value="gpt-slack">GPT: Draft + send Slack</option>
+            <option value="move-done">Auto-move to Done</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="closeWfModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveWf()">Create Workflow</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<script src="app.js"></script>
+</body>
+</html>
